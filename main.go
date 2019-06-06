@@ -6,9 +6,7 @@ import (
     "net/http"
 	"github.com/PuerkitoBio/goquery"
     "os"
-    "bufio"
-    "io/ioutil"
-    "regexp"
+   
 )
 var links[] string 
 //get all link
@@ -72,22 +70,10 @@ for _, v := range links {
         })
     }
 }
-func repair(){
-    file, err := os.Open("result.txt")
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    defer file.Close()
-    re := regexp.MustCompile(`(?m)^\s*$[\r\n]*|[\r\n]+\s+\z`)
-    reader := bufio.NewReader(file)
-    content, _ := ioutil.ReadAll(reader)
-    re.ReplaceAllString(string(content), "")
-}
+
 
 
 func main(){
     scraper()
     scrapers()
-    repair()	
 }
