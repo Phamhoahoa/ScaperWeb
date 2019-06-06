@@ -5,7 +5,10 @@ import (
     "strings"
     "net/http"
 	"github.com/PuerkitoBio/goquery"
-	"os"
+    "os"
+    "bufio"
+    "io/ioutil"
+    "regexp"
 )
 var links[] string 
 //get all link
@@ -22,7 +25,6 @@ func scraper(){
         log.Fatal(err)
     }
     defer resp.Body.Close()
-
     if resp.StatusCode != 200{
         log.Fatalf("Status code error: %d %s", resp.StatusCode, resp.Status)
     }
@@ -34,9 +36,7 @@ func scraper(){
 
     doc.Find("div.entry").Each(func(i int, s *goquery.Selection){
         href, _ := s.Find("p span a").First().Attr("href")
-        // if has_attr{
-        //     fmt.Println(href)
-        // }
+
         links=append(links,href)
 
     })
@@ -44,7 +44,6 @@ func scraper(){
 }
 //get data
 func scrapers(){
-// fmt.Println(links)
 file, _ := os.Create("result.txt")
 defer file.Close()
 for _, v := range links {   
@@ -62,17 +61,33 @@ for _, v := range links {
     if err != nil{
         log.Fatal(err)
     }
-    fmt.Println(doc.Find("title").Text())
+    // fmt.Println(doc.Find("title").Text())
 
-    doc.Find("tr td").Each(func(i int, s *goquery.Selection){
-        lines := "\n"+ strings.TrimSpace(s.Text())
+    doc.Find(".post-table tbody tr td").Each(func(i int, s *goquery.Selection){
+        lines := strings.TrimSpace(s.Text())
         // fmt.Fprintf(file, strings.TrimSpace(s.Find("td").Text()) + "\n")
-        fmt.Fprintf(file, lines + "\n")
-
+        if lines != "" {
+            fmt.Fprintln(file, lines)
+         }
         })
     }
 }
+func repair(){
+    file, err := os.Open("result.txt")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    defer file.Close()
+    re := regexp.MustCompile(`(?m)^\s*$[\r\n]*|[\r\n]+\s+\z`)
+    reader := bufio.NewReader(file)
+    content, _ := ioutil.ReadAll(reader)
+    re.ReplaceAllString(string(content), "")
+}
+
+
 func main(){
     scraper()
-    scrapers()	
+    scrapers()
+    repair()	
 }
